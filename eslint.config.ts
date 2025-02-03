@@ -1,12 +1,20 @@
-// @ts-check
-import sortKeys from 'eslint-plugin-sort-keys'
+// @ts-expect-error missing types
 import styleMigrate from '@stylistic/eslint-plugin-migrate'
-import antfu from './dist/index.js'
+
+import { antfu } from './src'
 
 export default antfu(
   {
     vue: true,
+    react: true,
+    solid: true,
+    svelte: true,
+    astro: true,
     typescript: true,
+    formatters: true,
+    type: 'lib',
+  },
+  {
     ignores: [
       'fixtures',
       '_fixtures',
@@ -14,11 +22,8 @@ export default antfu(
   },
   {
     files: ['src/**/*.ts'],
-    plugins: {
-      'sort-keys': sortKeys,
-    },
     rules: {
-      'sort-keys/sort-keys-fix': 'error',
+      'perfectionist/sort-objects': 'error',
     },
   },
   {

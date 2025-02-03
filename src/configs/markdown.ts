@@ -1,25 +1,46 @@
-import type { ConfigItem, OptionsComponentExts, OptionsOverrides } from '../types'
-import { GLOB_MARKDOWN, GLOB_MARKDOWN_CODE } from '../globs'
-import { pluginMarkdown } from '../plugins'
-import { OFF } from '../flags'
+import type { OptionsComponentExts, OptionsFiles, OptionsOverrides, TypedFlatConfigItem } from '../types'
 
-export function markdown(options: OptionsComponentExts & OptionsOverrides = {}): ConfigItem[] {
+import { mergeProcessors, processorPassThrough } from 'eslint-merge-processors'
+import { GLOB_MARKDOWN, GLOB_MARKDOWN_CODE, GLOB_MARKDOWN_IN_MARKDOWN } from '../globs'
+
+import { interopDefault, parserPlain } from '../utils'
+
+export async function markdown(
+  options: OptionsFiles & OptionsComponentExts & OptionsOverrides = {},
+): Promise<TypedFlatConfigItem[]> {
   const {
     componentExts = [],
+    files = [GLOB_MARKDOWN],
     overrides = {},
   } = options
 
+  const markdown = await interopDefault(import('@eslint/markdown'))
+
   return [
     {
-      name: 'antfu:markdown:setup',
+      name: 'antfu/markdown/setup',
       plugins: {
-        markdown: pluginMarkdown,
+        markdown,
       },
     },
     {
-      files: [GLOB_MARKDOWN],
-      name: 'antfu:markdown:processor',
-      processor: 'markdown/markdown',
+      files,
+      ignores: [GLOB_MARKDOWN_IN_MARKDOWN],
+      name: 'antfu/markdown/processor',
+      // `eslint-plugin-markdown` only creates virtual files for code blocks,
+      // but not the markdown file itself. We use `eslint-merge-processors` to
+      // add a pass-through processor for the markdown file itself.
+      processor: mergeProcessors([
+        markdown.processors!.markdown,
+        processorPassThrough,
+      ]),
+    },
+    {
+      files,
+      languageOptions: {
+        parser: parserPlain,
+      },
+      name: 'antfu/markdown/parser',
     },
     {
       files: [
@@ -33,53 +54,38 @@ export function markdown(options: OptionsComponentExts & OptionsOverrides = {}):
           },
         },
       },
-      name: 'antfu:markdown:rules',
+      name: 'antfu/markdown/disables',
       rules: {
-        'antfu/no-cjs-exports': OFF,
-        'antfu/no-ts-export-equal': OFF,
+        'antfu/no-top-level-await': 'off',
 
-        'no-alert': OFF,
-        'no-console': OFF,
-        'no-undef': OFF,
-        'no-unused-expressions': OFF,
-        'no-unused-vars': OFF,
+        'import/newline-after-import': 'off',
 
-        'node/prefer-global/process': OFF,
+        'no-alert': 'off',
+        'no-console': 'off',
+        'no-labels': 'off',
+        'no-lone-blocks': 'off',
+        'no-restricted-syntax': 'off',
+        'no-undef': 'off',
+        'no-unused-expressions': 'off',
+        'no-unused-labels': 'off',
 
-        'style/comma-dangle': OFF,
-        'style/eol-last': OFF,
+        'no-unused-vars': 'off',
+        'node/prefer-global/process': 'off',
+        'style/comma-dangle': 'off',
 
-        'ts/consistent-type-imports': OFF,
-        'ts/no-namespace': OFF,
-        'ts/no-redeclare': OFF,
-        'ts/no-require-imports': OFF,
-        'ts/no-unused-vars': OFF,
-        'ts/no-use-before-define': OFF,
-        'ts/no-var-requires': OFF,
+        'style/eol-last': 'off',
+        'ts/consistent-type-imports': 'off',
+        'ts/explicit-function-return-type': 'off',
+        'ts/no-namespace': 'off',
+        'ts/no-redeclare': 'off',
+        'ts/no-require-imports': 'off',
+        'ts/no-unused-expressions': 'off',
+        'ts/no-unused-vars': 'off',
+        'ts/no-use-before-define': 'off',
 
         'unicode-bom': 'off',
-        'unused-imports/no-unused-imports': OFF,
-        'unused-imports/no-unused-vars': OFF,
-
-        // Type aware rules
-        ...{
-          'ts/await-thenable': OFF,
-          'ts/dot-notation': OFF,
-          'ts/no-floating-promises': OFF,
-          'ts/no-for-in-array': OFF,
-          'ts/no-implied-eval': OFF,
-          'ts/no-misused-promises': OFF,
-          'ts/no-throw-literal': OFF,
-          'ts/no-unnecessary-type-assertion': OFF,
-          'ts/no-unsafe-argument': OFF,
-          'ts/no-unsafe-assignment': OFF,
-          'ts/no-unsafe-call': OFF,
-          'ts/no-unsafe-member-access': OFF,
-          'ts/no-unsafe-return': OFF,
-          'ts/restrict-plus-operands': OFF,
-          'ts/restrict-template-expressions': OFF,
-          'ts/unbound-method': OFF,
-        },
+        'unused-imports/no-unused-imports': 'off',
+        'unused-imports/no-unused-vars': 'off',
 
         ...overrides,
       },

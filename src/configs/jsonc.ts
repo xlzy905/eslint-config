@@ -1,30 +1,42 @@
-import type { ConfigItem, OptionsOverrides, OptionsStylistic } from '../types'
-import { GLOB_JSON, GLOB_JSON5, GLOB_JSONC } from '../globs'
-import { parserJsonc, pluginJsonc } from '../plugins'
+import type { OptionsFiles, OptionsOverrides, OptionsStylistic, TypedFlatConfigItem } from '../types'
 
-export function jsonc(options: OptionsStylistic & OptionsOverrides = {}): ConfigItem[] {
+import { GLOB_JSON, GLOB_JSON5, GLOB_JSONC } from '../globs'
+import { interopDefault } from '../utils'
+
+export async function jsonc(
+  options: OptionsFiles & OptionsStylistic & OptionsOverrides = {},
+): Promise<TypedFlatConfigItem[]> {
   const {
-    stylistic = true,
+    files = [GLOB_JSON, GLOB_JSON5, GLOB_JSONC],
     overrides = {},
+    stylistic = true,
   } = options
 
   const {
     indent = 2,
   } = typeof stylistic === 'boolean' ? {} : stylistic
 
+  const [
+    pluginJsonc,
+    parserJsonc,
+  ] = await Promise.all([
+    interopDefault(import('eslint-plugin-jsonc')),
+    interopDefault(import('jsonc-eslint-parser')),
+  ] as const)
+
   return [
     {
-      name: 'antfu:jsonc:setup',
+      name: 'antfu/jsonc/setup',
       plugins: {
         jsonc: pluginJsonc as any,
       },
     },
     {
-      files: [GLOB_JSON, GLOB_JSON5, GLOB_JSONC],
+      files,
       languageOptions: {
         parser: parserJsonc,
       },
-      name: 'antfu:jsonc:rules',
+      name: 'antfu/jsonc/rules',
       rules: {
         'jsonc/no-bigint-literals': 'error',
         'jsonc/no-binary-expression': 'error',

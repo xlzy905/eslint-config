@@ -1,10 +1,12 @@
-import globals from 'globals'
-import type { ConfigItem, OptionsIsInEditor, OptionsOverrides } from '../types'
-import { pluginAntfu, pluginUnusedImports } from '../plugins'
-import { OFF } from '../flags'
-import { GLOB_SRC, GLOB_SRC_EXT } from '../globs'
+import type { OptionsIsInEditor, OptionsOverrides, TypedFlatConfigItem } from '../types'
 
-export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): ConfigItem[] {
+import globals from 'globals'
+
+import { pluginAntfu, pluginUnusedImports } from '../plugins'
+
+export async function javascript(
+  options: OptionsIsInEditor & OptionsOverrides = {},
+): Promise<TypedFlatConfigItem[]> {
   const {
     isInEditor = false,
     overrides = {},
@@ -31,7 +33,13 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         },
         sourceType: 'module',
       },
-      name: 'antfu:javascript',
+      linterOptions: {
+        reportUnusedDisableDirectives: true,
+      },
+      name: 'antfu/javascript/setup',
+    },
+    {
+      name: 'antfu/javascript/rules',
       plugins: {
         'antfu': pluginAntfu,
         'unused-imports': pluginUnusedImports,
@@ -39,8 +47,9 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
       rules: {
         'accessor-pairs': ['error', { enforceForClassMembers: true, setWithoutGet: true }],
 
+        'antfu/no-top-level-await': 'error',
+
         'array-callback-return': 'error',
-        'arrow-parens': ['error', 'as-needed', { requireForBlockBody: true }],
         'block-scoped-var': 'error',
         'constructor-super': 'error',
         'default-case-last': 'error',
@@ -78,7 +87,6 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         'no-implied-eval': 'error',
         'no-import-assign': 'error',
         'no-invalid-regexp': 'error',
-        'no-invalid-this': 'error',
         'no-irregular-whitespace': 'error',
         'no-iterator': 'error',
         'no-labels': ['error', { allowLoop: false, allowSwitch: false }],
@@ -88,8 +96,7 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         'no-multi-str': 'error',
         'no-new': 'error',
         'no-new-func': 'error',
-        'no-new-object': 'error',
-        'no-new-symbol': 'error',
+        'no-new-native-nonconstructor': 'error',
         'no-new-wrappers': 'error',
         'no-obj-calls': 'error',
         'no-octal': 'error',
@@ -113,9 +120,6 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         ],
         'no-restricted-syntax': [
           'error',
-          'DebuggerStatement',
-          'LabeledStatement',
-          'WithStatement',
           'TSEnumDeclaration[const=true]',
           'TSExportAssignment',
         ],
@@ -156,7 +160,6 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         'no-useless-rename': 'error',
         'no-useless-return': 'error',
         'no-var': 'error',
-        'no-void': 'error',
         'no-with': 'error',
         'object-shorthand': [
           'error',
@@ -175,7 +178,7 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
           },
         ],
         'prefer-const': [
-          'error',
+          isInEditor ? 'warn' : 'error',
           {
             destructuring: 'all',
             ignoreReadBeforeAssign: true,
@@ -187,24 +190,18 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         'prefer-rest-params': 'error',
         'prefer-spread': 'error',
         'prefer-template': 'error',
-        'sort-imports': [
-          'error',
-          {
-            allowSeparatedGroups: false,
-            ignoreCase: false,
-            ignoreDeclarationSort: true,
-            ignoreMemberSort: false,
-            memberSyntaxSortOrder: ['none', 'all', 'multiple', 'single'],
-          },
-        ],
-
         'symbol-description': 'error',
         'unicode-bom': ['error', 'never'],
-        'unused-imports/no-unused-imports': isInEditor ? OFF : 'error',
-
+        'unused-imports/no-unused-imports': isInEditor ? 'warn' : 'error',
         'unused-imports/no-unused-vars': [
           'error',
-          { args: 'after-used', argsIgnorePattern: '^_', vars: 'all', varsIgnorePattern: '^_' },
+          {
+            args: 'after-used',
+            argsIgnorePattern: '^_',
+            ignoreRestSiblings: true,
+            vars: 'all',
+            varsIgnorePattern: '^_',
+          },
         ],
         'use-isnan': ['error', { enforceForIndexOf: true, enforceForSwitchCase: true }],
         'valid-typeof': ['error', { requireStringLiterals: true }],
@@ -212,13 +209,6 @@ export function javascript(options: OptionsIsInEditor & OptionsOverrides = {}): 
         'yoda': ['error', 'never'],
 
         ...overrides,
-      },
-    },
-    {
-      files: [`scripts/${GLOB_SRC}`, `cli.${GLOB_SRC_EXT}`],
-      name: 'antfu:scripts-overrides',
-      rules: {
-        'no-console': OFF,
       },
     },
   ]

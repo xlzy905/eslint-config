@@ -1,10 +1,11 @@
-import type { ConfigItem } from '../types'
+import type { TypedFlatConfigItem } from '../types'
+
 import { pluginComments } from '../plugins'
 
-export function comments(): ConfigItem[] {
+export async function comments(): Promise<TypedFlatConfigItem[]> {
   return [
     {
-      name: 'antfu:eslint-comments',
+      name: 'antfu/eslint-comments/rules',
       plugins: {
         'eslint-comments': pluginComments,
       },

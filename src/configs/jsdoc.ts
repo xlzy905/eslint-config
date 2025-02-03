@@ -1,16 +1,17 @@
-import type { ConfigItem, OptionsStylistic } from '../types'
-import { pluginJsdoc } from '../plugins'
+import type { OptionsStylistic, TypedFlatConfigItem } from '../types'
 
-export function jsdoc(options: OptionsStylistic = {}): ConfigItem[] {
+import { interopDefault } from '../utils'
+
+export async function jsdoc(options: OptionsStylistic = {}): Promise<TypedFlatConfigItem[]> {
   const {
     stylistic = true,
   } = options
 
   return [
     {
-      name: 'antfu:jsdoc',
+      name: 'antfu/jsdoc/rules',
       plugins: {
-        jsdoc: pluginJsdoc,
+        jsdoc: await interopDefault(import('eslint-plugin-jsdoc')),
       },
       rules: {
         'jsdoc/check-access': 'warn',

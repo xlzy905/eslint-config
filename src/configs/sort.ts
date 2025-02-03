@@ -1,15 +1,15 @@
-import type { ConfigItem } from '../types'
+import type { TypedFlatConfigItem } from '../types'
 
 /**
  * Sort package.json
  *
  * Requires `jsonc` config
  */
-export function sortPackageJson(): ConfigItem[] {
+export async function sortPackageJson(): Promise<TypedFlatConfigItem[]> {
   return [
     {
       files: ['**/package.json'],
-      name: 'antfu:sort-package-json',
+      name: 'antfu/sort/package-json',
       rules: {
         'jsonc/sort-array-values': [
           'error',
@@ -31,6 +31,7 @@ export function sortPackageJson(): ConfigItem[] {
               'packageManager',
               'description',
               'author',
+              'contributors',
               'license',
               'funding',
               'homepage',
@@ -70,15 +71,11 @@ export function sortPackageJson(): ConfigItem[] {
           },
           {
             order: { type: 'asc' },
-            pathPattern: '^(?:dev|peer|optional|bundled)?[Dd]ependencies$',
+            pathPattern: '^(?:dev|peer|optional|bundled)?[Dd]ependencies(Meta)?$',
           },
           {
             order: { type: 'asc' },
-            pathPattern: '^resolutions$',
-          },
-          {
-            order: { type: 'asc' },
-            pathPattern: '^pnpm.overrides$',
+            pathPattern: '^(?:resolutions|overrides|pnpm.overrides)$',
           },
           {
             order: [
@@ -88,6 +85,22 @@ export function sortPackageJson(): ConfigItem[] {
               'default',
             ],
             pathPattern: '^exports.*$',
+          },
+          {
+            order: [
+              // client hooks only
+              'pre-commit',
+              'prepare-commit-msg',
+              'commit-msg',
+              'post-commit',
+              'pre-rebase',
+              'post-rewrite',
+              'post-checkout',
+              'post-merge',
+              'pre-push',
+              'pre-auto-gc',
+            ],
+            pathPattern: '^(?:gitHooks|husky|simple-git-hooks)$',
           },
         ],
       },
@@ -100,11 +113,11 @@ export function sortPackageJson(): ConfigItem[] {
  * Requires `jsonc` config
  */
 
-export function sortTsconfig(): ConfigItem[] {
+export function sortTsconfig(): TypedFlatConfigItem[] {
   return [
     {
       files: ['**/tsconfig.json', '**/tsconfig.*.json'],
-      name: 'antfu:sort-tsconfig',
+      name: 'antfu/sort/tsconfig-json',
       rules: {
         'jsonc/sort-keys': [
           'error',
@@ -211,6 +224,7 @@ export function sortTsconfig(): ConfigItem[] {
               'allowSyntheticDefaultImports',
               'esModuleInterop',
               'forceConsistentCasingInFileNames',
+              'isolatedDeclarations',
               'isolatedModules',
               'preserveSymlinks',
               'verbatimModuleSyntax',
